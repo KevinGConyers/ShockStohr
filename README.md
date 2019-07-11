@@ -1,3 +1,3 @@
-[ShockStohr]
+# ShockStohr
 
-Command Line password manager writting in python.
+Command Line password manager written in python.
