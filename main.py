@@ -6,6 +6,7 @@ def handleArgs():
 # -f --file [filename] points to the file containing the encrypted data, if not provided a default file is produced in /home/$user/.ShockStohr/defaultstorage
 # -m --mode [mode] chose the moder to operate in. The possible modes are clip, add, and comm. Clip retrieves a password and puts in on your clipboard, add adds 
 #   a password to the data file and comm runs a command with the username and password [Not yet implemented]
+# -c if in command mode, this supplies the command to run
 # -u [username] the user name to either retrieve the password for, or to store the password under
 # -p [password] the password to store
 # -n [Note] a note to help indentify the password
