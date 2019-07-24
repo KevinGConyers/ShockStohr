@@ -92,7 +92,7 @@ def loadConfig():
                 attribute, value = line.replace(" ", "").split(":")
                 configdict[attribute] = value
     else:
-        with open("/usr/local/etc/.ShockStohr/default_config", "r") as configfile:
+        with open("/usr/local/etc/ShockStohr/default_config", "r") as configfile:
             for line in configfile:
                 attribute, value = line.replace(" ", "").replace("\t", "").strip("\n").split(":")
                 configdict[attribute] = value
