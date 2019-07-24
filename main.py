@@ -1,6 +1,10 @@
 #!/usr/bin/python
 import sys
 import argparse
+import os
+import pyperclip
+
+
 def handleArgs():
 # Allowed arguments are
 # -f --file [filename] points to the file containing the encrypted data, if not provided a default file is produced in /home/$user/.ShockStohr/defaultstorage
@@ -11,23 +15,21 @@ def handleArgs():
 # -p [password] the password to store
 # -n [Note] a note to help indentify the password
     parser = argparse.ArgumentParser(description='Command line password manager')
-    parser.add_argument('-f', '--filename',  dest='filename', action='store', default='default.shock', help='provide a filename, if not provided, a default is used, located in ~/.ShockStohr/default.shock')
+    #parser.add_argument('-f', '--filename',  dest='filename', action='store', default='default.shock', help='provide a filename, if not provided, a default is used, located in ~/.ShockStohr/default.shock')
     parser.add_argument('-m', '--mode', dest='mode', action='store', help='Sets the mode. Acceptable modes are clip and add', required='true')
-    parser.add_argument('-u', dest='username', action='store')
+    parser.add_argument('-u', dest='username', action='store', required='true')
     parser.add_argument('-p', dest='password', nargs='?', action='store', default='fail')
     parser.add_argument('-n', dest='note', nargs='?', action='store', default='fail')
+    parser.add_argument('-k', dest='key', action='store', default='')
     args = parser.parse_args(sys.argv[1:])
     return args
 
 def main():
+    config = loadConfig()
     args = handleArgs()
-    filepath = ""
-    if args.filename != "default.shock":
-        filepath = "./" + args.filename + ".shock"
-    else:
-        filepath = "~/.ShockStohr/" + args.filename
+    home = os.path.expanduser("~")
+    filepath = home + "/.ShockStohr/" + config["file"] + ".shock"
 
-    print(args)
     if args.mode == 'add':
         if args.note  == 'fail':
 
@@ -39,18 +41,60 @@ def main():
         else:
             addPassword(filepath, args.username, args.password, args.note)
             print("added the password for %s to the database" % (args.username))
+    if args.mode == 'clip':
+        extractPassword(filepath, args.username)
 
 
-def extractPasswordList(filepath, username):
+def extractPassword(filepath, username):
+    if not os.path.exists(filepath):
+        print("No file exists by that name, check your config file\n")
+        exit()
+    usernamelist = []
     passwordlist = []
-    with open(filepath, r) as inputfile:
+    notelist = []
+    with open(filepath, "r") as inputfile:
         for line in inputfile:
-            if usename in line:
-                passwordlist.append(line)
+            if username in line:
+                user, passw, note = line.split(',')
+                usernamelist.append(user)
+                passwordlist.append(passw)
+                notelist.append(note)
+    if len(usernamelist) > 1:
+        print("Please choose an account with the correct note:\n")
+        for x in range(0, len(usernamelist)):
+                        print("%i) %s\t\t\t%s\n" % (x+1, usernamelist[x], notelist[x]))
+        selected = int(input("Which account number:\n"))
+        pyperclip.copy(passwordlist[selected-1]) #avoiding an off-by-one error
+    else:
+        pyperclip.copy(passwordlist[0])
+
+
+
 
 
 def addPassword(filepath, username, password, note):
+    if not os.path.isfile(filepath):
+        print("No file exists by that name, creating at " + filepath)
+        createFile(filepath)
     with open(filepath, "a") as outputfile:
         outputfile.write(username + ", " + password + ", " + note + "\n" )
 
+
+def createFile(filepath):
+    with open(filepath, "w+") as outputfile:
+        outputfile.write("test, test, this is a default encryption test and should be ignored \n")
+
+def loadConfig():
+    configdict = {} 
+    if os.path.exists("~/.ShockStohr/config"):
+        with open("~/.ShockStohr/config", "r") as configfile:
+            for line in configfile:
+                attribute, value = line.replace(" ", "").split(":")
+                configdict[attribute] = value
+    else:
+        with open("/usr/local/etc/.ShockStohr/default_config", "r") as configfile:
+            for line in configfile:
+                attribute, value = line.replace(" ", "").replace("\t", "").strip("\n").split(":")
+                configdict[attribute] = value
+    return configdict
 main()
